@@ -1,0 +1,69 @@
+\documentclass[a4,10pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{fancyhdr}
+\usepackage{graphicx}
+\usepackage{cancel}
+\usepackage[english]{babel}
+\usepackage{hyperref}
+\usepackage[
+backend=biber,
+style=ieee,
+]{biblatex}
+
+\addbibresource{ref.bib}
+
+\pagestyle{fancy}
+\fancyhead[LO,L]{ FINESI}
+\fancyhead[CO,C]{Programming Language II}
+\fancyhead[RO,R]{\today}
+\fancyfoot[LO,L]{Mamani Maraza Rusbel Yampier}
+\fancyfoot[CO,C]{}
+\fancyfoot[RO,R]{Page. \thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+
+\title{Creating a Very Basic Programming Language}
+
+\begin{document}
+	
+	\section{How do I plan to create my basic language?}
+	\begin{itemize}
+		\item First, I do some research on compilers: 
+		\item Second, I will define the grammar of the language
+		\item Third, I create the lexical analyzer
+		\item Fourth, I create the parser
+		\item Fifth, create the semantic parser
+		\item Sixth, create the middle code
+		\item Seventh, optimize the language
+		\item Eighth, start generating code
+	\end{itemize}
+	My language will be of the compilation type.
+	I'll use the following grammars for my code:
+	
+	\begin{verbatim}
+		<programa> ::= <instrucción> | <instrucción> <programa> | <comentario> <programa>
+		<instrucción> ::= <asignación> | <imprimir>
+		<asignación> ::= <identificador> "=" <expresión>
+		<imprimir> ::= "see" <expresión>
+		<expresión> ::= <operando> | <expresión> "+" <operando> | <expresión> "-" <operando> | <expresión> "*" <operando> | <expresión> "/" <operando>
+		<operando> ::= <entero> | <no_exacto> | <cadena>
+		<entero> ::= "whole"
+		<no_exacto> ::= "imp"
+		<cadena> ::= "[" <texto> "]"
+		<identificador> ::= [a-zA-Z][a-zA-Z0-9]*
+		<texto> ::= cualquier secuencia de caracteres
+		<comentario> ::= "*| cualquier texto |*"
+	\end{verbatim}
+	
+	\printbibliography
+	
+	\begin{figure}[htb]
+		\centering
+		\includegraphics[scale=0.5]{QR.PNG}
+		\caption{GITHUB}
+	\end{figure}
+	
+\end{document}
+
+
