@@ -1,0 +1,183 @@
+import re
+import sys
+import os
+
+def lexer(code):
+    tokens = []
+    token_specification = [
+        ('COMMENT',  r'\*\|.*?\|\*'),  # Comentarios
+        ('NUMBER',   r'whole\d+'),      # Enteros
+        ('FLOAT',    r'imp\d+(\.\d+)?'),# No exactos
+        ('STRING',   r'\[.*?\]'),       # Cadenas
+        ('IDENTIFIER', r'[a-zA-Z][a-zA-Z0-9]*'), # Identificadores
+        ('ASSIGN',   r'='),             # Asignación
+        ('PRINT',    r'see'),           # Imprimir
+        ('PLUS',     r'\+'),            # Suma
+        ('MINUS',    r'-'),             # Resta
+        ('TIMES',    r'\*'),            # Multiplicación
+        ('DIVIDE',   r'/'),             # División
+        ('SKIP',     r'[ \t]+'),        # Espacios y tabulaciones
+        ('NEWLINE',  r'\n'),            # Nueva línea
+        ('MISMATCH', r'.'),             # Caracteres no reconocidos
+    ]
+    token_regex = '|'.join('(?P<%s>%s)' % pair for pair in token_specification)
+    for mo in re.finditer(token_regex, code):
+        kind = mo.lastgroup
+        value = mo.group()
+        if kind == 'NUMBER':
+            value = int(value[5:])  # Remove 'whole'
+        elif kind == 'FLOAT':
+            value = float(value[3:])  # Remove 'imp'
+        elif kind == 'STRING':
+            value = value[1:-1]  # Remove brackets
+        elif kind == 'IDENTIFIER':
+            value = str(value)
+        elif kind == 'SKIP':
+            continue
+        elif kind == 'NEWLINE':
+            continue
+        elif kind == 'MISMATCH':
+            raise RuntimeError(f'Error: {value}')
+        tokens.append((kind, value))
+    print("Tokens:", tokens)  # Añadir impresión para depuración
+    return tokens
+
+class Node:
+    def __init__(self, type, value=None, children=None):
+        self.type = type
+        self.value = value
+        self.children = children if children else []
+
+def parse(tokens):
+    def parse_program(index):
+        nodes = []
+        while index < len(tokens):
+            print(f"parse_program: index {index}, token {tokens[index]}")  # Añadir impresión para depuración
+            if tokens[index][0] == 'COMMENT':
+                index += 1
+                continue
+            node, index = parse_instruction(index)
+            nodes.append(node)
+        return nodes, index
+
+    def parse_instruction(index):
+        print(f"parse_instruction: index {index}, token {tokens[index]}")  # Añadir impresión para depuración
+        if tokens[index][0] == 'IDENTIFIER' and tokens[index + 1][0] == 'ASSIGN':
+            return parse_assignment(index)
+        elif tokens[index][0] == 'PRINT':
+            return parse_print(index)
+        else:
+            raise SyntaxError(f'Unexpected token: {tokens[index]}')
+
+    def parse_assignment(index):
+        identifier = tokens[index][1]
+        index += 2  # Skip identifier and '='
+        expr, index = parse_expression(index)
+        return Node('Assignment', value=identifier, children=[expr]), index
+
+    def parse_print(index):
+        index += 1  # Skip 'see'
+        expr, index = parse_expression(index)
+        return Node('Print', children=[expr]), index
+
+    def parse_expression(index):
+        left, index = parse_operand(index)
+        while index < len(tokens) and tokens[index][0] in ('PLUS', 'MINUS', 'TIMES', 'DIVIDE'):
+            op = tokens[index][0]
+            index += 1
+            right, index = parse_operand(index)
+            left = Node('BinaryOp', value=op, children=[left, right])
+        return left, index
+
+    def parse_operand(index):
+        token_type, value = tokens[index]
+        if token_type == 'NUMBER':
+            node = Node('Number', value=value)
+        elif token_type == 'FLOAT':
+            node = Node('Float', value=value)
+        elif token_type == 'STRING':
+            node = Node('String', value=value)
+        elif token_type == 'IDENTIFIER':
+            node = Node('Identifier', value=value)
+        else:
+            raise SyntaxError(f'Unexpected token in operand: {tokens[index]}')
+        return node, index + 1
+
+    ast, _ = parse_program(0)
+    return ast
+
+def evaluate(ast, env=None):
+    if env is None:
+        env = {}
+    results = []
+    for node in ast:
+        if node.type == 'Assignment':
+            identifier = node.value
+            value = evaluate_expression(node.children[0], env)
+            env[identifier] = value
+        elif node.type == 'Print':
+            value = evaluate_expression(node.children[0], env)
+            results.append(value)
+    return results
+
+def evaluate_expression(node, env):
+    if node.type == 'Number':
+        return node.value
+    elif node.type == 'Float':
+        return node.value
+    elif node.type == 'String':
+        return node.value
+    elif node.type == 'Identifier':
+        return env[node.value]
+    elif node.type == 'BinaryOp':
+        left = evaluate_expression(node.children[0], env)
+        right = evaluate_expression(node.children[1], env)
+        if node.value == 'PLUS':
+            return left + right
+        elif node.value == 'MINUS':
+            return left - right
+        elif node.value == 'TIMES':
+            return left * right
+        elif node.value == 'DIVIDE':
+            return left / right
+    else:
+        raise ValueError('Unknown node type')
+
+def repl():
+    env = {}
+    while True:
+        try:
+            code = input('> ')
+            if code.strip() == 'exit':
+                break
+            tokens = lexer(code + '\n')
+            ast = parse(tokens)
+            results = evaluate(ast, env)
+            for result in results:
+                print(result)
+        except Exception as e:
+            print(e)
+
+def main():
+    if len(sys.argv) == 2:
+        source_file = sys.argv[1]
+        if not os.path.isfile(source_file):
+            print(f"Error: No se puede encontrar el archivo {source_file}")
+            return
+        try:
+            with open(source_file, 'r') as file:
+                code = file.read()
+            tokens = lexer(code)
+            ast = parse(tokens)
+            results = evaluate(ast)
+            for result in results:
+                print(result)
+        except PermissionError:
+            print(f"Error: No se tienen permisos para acceder al archivo {source_file}")
+        except Exception as e:
+            print(f"Error al procesar el archivo {source_file}: {e}")
+    else:
+        repl()
+
+if __name__ == "__main__":
+    main()
