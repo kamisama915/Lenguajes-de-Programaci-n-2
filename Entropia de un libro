@@ -1,0 +1,119 @@
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <cmath>
+#include <unordered_map>
+#include <algorithm>
+#include <ctime>
+
+using namespace std;
+
+// Función para calcular la entropía
+double calcularEntropia(const unordered_map<char, double>& frecuencias, int total) {
+    double entropia = 0.0;
+    for (const auto& par : frecuencias) {
+        double probabilidad = par.second / total;
+        entropia -= probabilidad * log2(probabilidad);
+    }
+    return entropia;
+}
+
+// Cifrado César
+string cifradoCesar(const string& texto, int desplazamiento) {
+    string cifrado = texto;
+    for (char& c : cifrado) {
+        if (isalpha(c)) {
+            char base = islower(c) ? 'a' : 'A';
+            c = ((c - base + desplazamiento) % 26) + base;
+        }
+    }
+    return cifrado;
+}
+
+// Cifrado de sustitución aleatoria
+string cifradoSustitucionAleatoria(const string& texto) {
+    string cifrado = texto;
+    string alfabeto = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+    string alfabetoAleatorio = alfabeto;
+    random_shuffle(alfabetoAleatorio.begin(), alfabetoAleatorio.end());
+    unordered_map<char, char> mapeo;
+    for (size_t i = 0; i < alfabeto.size(); ++i) {
+        mapeo[alfabeto[i]] = alfabetoAleatorio[i];
+    }
+    for (char& c : cifrado) {
+        if (isalpha(c)) {
+            char base = islower(c) ? 'a' : 'A';
+            c = mapeo[c];
+        }
+    }
+    return cifrado;
+}
+
+// Cifrado XOR con clave aleatoria
+string cifradoXOR(const string& texto, const string& clave) {
+    string cifrado = texto;
+    for (size_t i = 0; i < cifrado.size(); ++i) {
+        cifrado[i] ^= clave[i % clave.size()];
+    }
+    return cifrado;
+}
+
+int main() {
+    // Nombre del archivo de texto
+    string nombreArchivo = "mi_libro.txt";
+
+    // Abrir el archivo de texto
+    ifstream archivoTexto(nombreArchivo);
+    if (!archivoTexto) {
+        cerr << "Error al abrir el archivo de texto." << endl;
+        return 1;
+    }
+
+    // Leer el contenido del archivo de texto
+    string textoCompleto;
+    string linea;
+    while (getline(archivoTexto, linea)) {
+        textoCompleto += linea + "\n";
+    }
+    archivoTexto.close();
+
+    // Calcular la entropía del texto completo
+    unordered_map<char, double> frecuencias;
+    int total = 0;
+    for (char c : textoCompleto) {
+        if (isalpha(c)) {
+            frecuencias[c]++;
+            total++;
+        }
+    }
+    double entropiaTextoCompleto = calcularEntropia(frecuencias, total);
+    cout << "Entropía del texto completo: " << entropiaTextoCompleto << " bits" << endl;
+
+    // Aplicar cifrado César
+    int desplazamiento;
+    cout << "Ingrese un desplazamiento para el cifrado César: ";
+    cin >> desplazamiento;
+    string textoCesarCifrado = cifradoCesar(textoCompleto, desplazamiento);
+    double entropiaCesar = calcularEntropia(frecuencias, total);
+
+    // Aplicar cifrado de sustitución aleatoria
+    string textoSustitucionAleatoriaCifrado = cifradoSustitucionAleatoria(textoCompleto);
+    double entropiaSustitucionAleatoria = calcularEntropia(frecuencias, total);
+
+    // Generar clave aleatoria para el cifrado XOR
+    string claveAleatoria;
+    for (size_t i = 0; i < textoCompleto.size(); ++i) {
+        claveAleatoria += rand() % 256; // Caracteres aleatorios ASCII
+    }
+
+    // Aplicar cifrado XOR
+    string textoXORCifrado = cifradoXOR(textoCompleto, claveAleatoria);
+    double entropiaXOR = calcularEntropia(frecuencias, total);
+
+    // Mostrar las entropías
+    cout << "Entropía del cifrado César: " << entropiaCesar << " bits" << endl;
+    cout << "Entropía del cifrado de sustitución aleatoria: " << entropiaSustitucionAleatoria << " bits" << endl;
+    cout << "Entropía del cifrado XOR: " << entropiaXOR << " bits" << endl;
+
+    return 0;
+}
