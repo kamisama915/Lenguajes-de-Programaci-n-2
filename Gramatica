@@ -1,0 +1,85 @@
+#include <iostream>
+#include <unordered_map>
+#include <vector>
+#include <string>
+
+using namespace std;
+
+class Grammar {
+private:
+    unordered_map<char, vector<string>> productions;
+
+public:
+    
+    void addProduction(char nonTerminal, const string& production) {
+        productions[nonTerminal].push_back(production);
+    }
+
+   
+    void printProductions() {
+        for (const auto& pair : productions) {
+            cout << pair.first << " -> ";
+            for (const string& production : pair.second) {
+                cout << production << " | ";
+            }
+            cout << endl;
+        }
+    }
+};
+
+int main() {
+    Grammar grammar;
+    char option;
+
+    cout << "Creación de Gramatica" << endl;
+
+    do {
+        cout << "\nMenu:\n";
+        cout << "1. Agregar simbolo no terminal\n";
+        cout << "2. Agregar simbolo terminal\n";
+        cout << "3. Agregar producción\n";
+        cout << "4. Ver producciones\n";
+        cout << "5. Salir\n";
+        cout << "Selecciona una opcion: ";
+        cin >> option;
+
+        switch (option) {
+            case '1': {
+                char nonTerminal;
+                cout << "Ingresa el simbolo no terminal: ";
+                cin >> nonTerminal;
+                grammar.addProduction(nonTerminal, ""); // Agregar el símbolo no terminal sin producción por ahora
+                break;
+            }
+            case '2': {
+                char terminal;
+                cout << "Ingresa el simbolo terminal: ";
+                cin >> terminal;
+                // Agregar el símbolo terminal como producción de sí mismo
+                grammar.addProduction(terminal, string(1, terminal));
+                break;
+            }
+            case '3': {
+                char nonTerminal;
+                string production;
+                cout << "Ingresa el simbolo no terminal para la produccion: ";
+                cin >> nonTerminal;
+                cout << "Ingresa la produccion: ";
+                cin >> production;
+                grammar.addProduction(nonTerminal, production);
+                break;
+            }
+            case '4':
+                cout << "\nProducciones de la gramatica:\n";
+                grammar.printProductions();
+                break;
+            case '5':
+                cout << "Saliendo...\n";
+                break;
+            default:
+                cout << "Opcion no valida. Por favor, selecciona una opción valida.\n";
+        }
+    } while (option != '5');
+
+    return 0;
+}
