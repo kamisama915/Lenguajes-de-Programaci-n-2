@@ -1,0 +1,94 @@
+import streamlit as st
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Configuración de la página
+st.set_page_config(page_title='Análisis de Datos con Streamlit', layout='wide')
+
+# Título de la Aplicación
+st.title('Análisis de Datos con Streamlit')
+
+# Subida de archivo de datos
+st.sidebar.header('Sube tu archivo CSV')
+uploaded_file = st.sidebar.file_uploader("Elige un archivo CSV", type=["csv"])
+
+def convert_to_numeric(df, columns):
+    for col in columns:
+        df[col] = pd.to_numeric(df[col], errors='coerce')
+    return df
+
+if uploaded_file is not None:
+    try:
+        # Lectura de Datos con manejo de encoding
+        df = pd.read_csv(uploaded_file, encoding='latin1')
+        
+        # Convertir columnas a numérico con manejo de errores
+        df = convert_to_numeric(df, df.columns)
+        
+        st.write("## Vista de los Datos")
+        st.dataframe(df.head())
+
+        # Resumen de Datos
+        st.write("## Resumen de los Datos")
+        st.write(df.describe())
+
+        # Validación de datos numéricos
+        numeric_columns = df.select_dtypes(include=['float64', 'int64']).columns.tolist()
+
+        if len(numeric_columns) < 2:
+            st.error("El archivo CSV debe contener al menos dos columnas numéricas.")
+        else:
+            # Visualización de Datos
+            st.write("## Visualización de Datos")
+
+            # Selección de columnas para los gráficos
+            x_axis = st.selectbox('Seleccione la columna para el eje X', numeric_columns)
+            y_axis = st.selectbox('Seleccione la columna para el eje Y', numeric_columns)
+
+            # Gráfico de dispersión
+            st.write("### Gráfico de Dispersión")
+            fig, ax = plt.subplots()
+            sns.scatterplot(data=df, x=x_axis, y=y_axis, ax=ax)
+            st.pyplot(fig)
+
+            # Gráfico de barras
+            st.write("### Gráfico de Barras")
+            fig, ax = plt.subplots()
+            sns.barplot(data=df, x=x_axis, y=y_axis, ax=ax)
+            st.pyplot(fig)
+
+            # Gráfico de histogramas
+            st.write("### Histograma")
+            fig, ax = plt.subplots()
+            sns.histplot(data=df, x=x_axis, kde=True, ax=ax)
+            st.pyplot(fig)
+
+            # Técnica estadística: Regresión Lineal Simple
+            st.write("## Técnica Estadística: Regresión Lineal Simple")
+            from sklearn.linear_model import LinearRegression
+            import numpy as np
+
+            X = df[[x_axis]].dropna().values.reshape(-1, 1)
+            y = df[y_axis].dropna().values
+
+            if len(X) == 0 or len(y) == 0:
+                st.error("Las columnas seleccionadas contienen solo valores no numéricos.")
+            else:
+                model = LinearRegression()
+                model.fit(X, y)
+                y_pred = model.predict(X)
+
+                st.write(f"**Coeficiente de Regresión (Pendiente):** {model.coef_[0]}")
+                st.write(f"**Intersección (Intercepto):** {model.intercept_}")
+
+                # Visualización de la regresión
+                st.write("### Gráfico de Regresión Lineal")
+                fig, ax = plt.subplots()
+                sns.scatterplot(data=df, x=x_axis, y=y_axis, ax=ax, label='Datos Reales')
+                sns.lineplot(x=df[x_axis], y=y_pred, ax=ax, color='red', label='Regresión Lineal')
+                st.pyplot(fig)
+    except Exception as e:
+        st.error(f"Error al procesar el archivo: {e}")
+else:
+    st.write("Por favor, sube un archivo CSV para comenzar.")
