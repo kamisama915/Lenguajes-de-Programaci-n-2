@@ -1,0 +1,48 @@
+from Crypto.Cipher import AES
+from Crypto.Random import get_random_bytes
+from Crypto.Protocol.KDF import PBKDF2
+import base64
+
+def encrypt_AES(key, plaintext):
+    cipher = AES.new(key, AES.MODE_GCM)
+    ciphertext, tag = cipher.encrypt_and_digest(plaintext.encode('utf-8'))
+    return ciphertext, cipher.nonce, tag
+
+def decrypt_AES(key, nonce, ciphertext, tag):
+    cipher = AES.new(key, AES.MODE_GCM, nonce=nonce)
+    plaintext = cipher.decrypt_and_verify(ciphertext, tag)
+    return plaintext.decode('utf-8')
+
+# Función para generar una clave a partir de una contraseña
+def generate_key(password, salt):
+    return PBKDF2(password, salt, dkLen=32)
+
+# Solicitar al usuario que ingrese un texto
+texto_original = input("Ingresa un texto a encriptar: ")
+
+# Generar una contraseña y una sal
+password = input("Crea una contraseña para encriptar el texto: ")
+salt = get_random_bytes(AES.block_size)
+key = generate_key(password, salt)
+
+# Encriptar el texto
+ciphertext, nonce, tag = encrypt_AES(key, texto_original)
+
+# Mostrar el texto cifrado
+texto_cifrado = base64.b64encode(salt + nonce + tag + ciphertext).decode('utf-8')
+print("Texto cifrado:", texto_cifrado)
+
+# Solicitar al usuario que ingrese la contraseña para desencriptar
+contrasena_ingresada = input("Ingresa la contraseña para ver el texto original: ")
+
+# Verificar la contraseña e imprimir el texto original
+if contrasena_ingresada == password:
+    salt = base64.b64decode(texto_cifrado)[:AES.block_size]
+    nonce = base64.b64decode(texto_cifrado)[AES.block_size:AES.block_size*2]
+    tag = base64.b64decode(texto_cifrado)[AES.block_size*2:AES.block_size*2+16]
+    ciphertext = base64.b64decode(texto_cifrado)[AES.block_size*2+16:]
+    key = generate_key(password, salt)
+    texto_original = decrypt_AES(key, nonce, ciphertext, tag)
+    print("Texto original:", texto_original)
+else:
+    print("Contraseña incorrecta. No puedes ver el texto original.")
