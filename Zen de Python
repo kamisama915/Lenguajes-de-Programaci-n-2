@@ -1,0 +1,59 @@
+\documentclass{article}
+\usepackage{enumitem}
+\usepackage{listings}
+
+\begin{document}
+
+\title{The Zen of Python \\ \large University: [Universidad Nacional del Altiplano Puno] \\ Course: [PROGRAMMING LANGUAGE II] \\ Author: [Mamani Maraza Rusbel Yampier]}
+\date{29/05/2024}
+\maketitle
+
+\section*{The Zen of Python}
+
+\begin{enumerate}[label=\textbf{\arabic*.}, align=left, leftmargin=*]
+
+\item Beautiful is better than ugly.
+\item Explicit is better than implicit.
+\item Simple is better than complex.
+\item Complex is better than complicated.
+\item Flat is better than nested.
+\item Sparse is better than dense.
+\item Readability counts.
+\item Special cases aren't special enough to break the rules.
+\item Although practicality beats purity.
+\item Errors should never pass silently.
+\item Unless explicitly silenced.
+\item In the face of ambiguity, refuse the temptation to guess.
+\item There should be one-- and preferably only one --obvious way to do it.
+\item Although that way may not be obvious at first unless you're Dutch.
+\item Now is better than never.
+\item Although never is often better than right now.
+\item If the implementation is hard to explain, it's a bad idea.
+\item If the implementation is easy to explain, it may be a good idea.
+\item Namespaces are one honking great idea -- let's do more of those!
+
+\end{enumerate}
+
+\section*{Python Code: Maximum Number}
+
+\begin{lstlisting}[language=Python]
+# Principle: Simple is better than complex.
+
+# Problem: Find the maximum number in a list of integers.
+
+# List of integers
+numbers = [10, 5, 8, 20, 3, 15]
+
+# Initialize maximum number as the first element of the list
+max_number = numbers[0]
+
+# Loop through the list to find the maximum number
+for number in numbers:
+    if number > max_number:
+        max_number = number
+
+# Print the maximum number
+print("The maximum number in the list is:", max_number)
+\end{lstlisting}
+
+\end{document}
